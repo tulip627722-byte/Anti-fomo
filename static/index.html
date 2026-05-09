@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>反 FOMO - AI 技术理性判断</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-primary': '#0a0a0f',
+            'bg-secondary': '#12121a',
+            'bg-tertiary': '#1a1a25',
+            'text-primary': '#e4e4e7',
+            'text-secondary': '#a1a1aa',
+            'text-muted': '#71717a',
+            'verdict-green': '#10b981',
+            'verdict-yellow': '#f59e0b',
+            'verdict-red': '#ef4444',
+            'accent': '#6366f1',
+          },
+          fontFamily: {
+            'sans': ['Inter', 'system-ui', 'sans-serif'],
+            'display': ['Space Grotesk', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #1a1a25; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2a2a35; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); }
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.5); }
+    }
+
+    @keyframes pulse-yellow {
+      0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.5); }
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.8s var(--ease-expo-out) forwards;
+    }
+
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .animate-spin-slow {
+      animation: spin 2s linear infinite;
+    }
+
+    .verdict-green-glow { animation: pulse-green 3s ease-in-out infinite; }
+    .verdict-yellow-glow { animation: pulse-yellow 3s ease-in-out infinite; }
+    .verdict-red-glow { animation: pulse-red 3s ease-in-out infinite; }
+
+    .glass {
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      background: #6366f1;
+      border-radius: 50%;
+      animation: float 1s ease-in-out infinite;
+    }
+
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    .analysis-step {
+      opacity: 0.4;
+      transition: all 0.5s var(--ease-smooth);
+    }
+
+    .analysis-step.active {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+
+    .analysis-step.completed {
+      opacity: 0.7;
+    }
+
+    .progress-bar {
+      transition: width 0.5s var(--ease-expo-out);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .bg-mesh {
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+        #0a0a0f;
+    }
+
+    .nav-link {
+      position: relative;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: #6366f1;
+      transition: all 0.3s var(--ease-expo-out);
+      transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .tech-card {
+      transition: all 0.3s var(--ease-smooth);
+    }
+
+    .tech-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z: 100;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+  </style>
+</head>
+<body class="bg-mesh min-h-screen">
+  <!-- Navigation -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <div class="flex items-center space-x-2 cursor-pointer" onclick="app.switchView('home')">
+          <span class="text-2xl font-display font-bold text-white">
+            <span class="text-accent">反</span> FOMO
+          </span>
+        </div>
+        <div class="flex items-center space-x-6">
+          <!-- Admin Panel Link (only for admins) -->
+          <button id="admin-link" class="hidden nav-link text-accent hover:text-white transition-colors text-sm font-medium">
+            📊 数据面板
+          </button>
+          <!-- User Menu -->
+          <div id="user-menu" class="hidden flex items-center gap-3">
+            <span id="username-display" class="text-text-secondary text-sm"></span>
+            <button id="logout-btn" class="text-text-muted hover:text-white text-sm transition-colors">
+              退出
+            </button>
+          </div>
+          <!-- Login Button -->
+          <button id="login-btn" class="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/80 transition-colors">
+            登录
+          </button>
+          <a href="https://github.com" target="_blank" class="nav-link text-text-secondary hover:text-white transition-colors text-sm font-medium flex items-center gap-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal">
+    <div class="bg-bg-secondary rounded-xl border border-white/10 p-8 w-full max-w-md mx-4">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-display font-bold text-white">登录</h2>
+        <button id="close-login" class="text-text-muted hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Login Form -->
+      <div id="login-form">
+        <div class="space-y-4">
+          <div>
+            <label class="text-text-muted text-sm block mb-2">用户名</label>
+            <input type="text" id="login-username" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-text-muted focus:outline-none focus:border-accent/50" placeholder="输入用户名">
+          </div>
+          <div>
+            <label class="text-text-muted text-sm block mb-2">密码</label>
+            <input type="password" id="login-password" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-text-muted focus:outline-none focus:border-accent/50" placeholder="输入密码">
+          </div>
+          <button id="do-login" class="w-full py-3 bg-accent text-white rounded-lg font-medium hover:bg-accent/80 transition-colors">
+            登录
+          </button>
+        </div>
+        <p class="text-center text-text-muted text-sm mt-4">
+          还没有账号？<button id="show-register" class="text-accent hover:underline">立即注册</button>
+        </p>
+        <div class="mt-4 p-3 bg-white/5 rounded-lg">
+          <p class="text-text-muted text-xs">管理员账号: admin / admin123</p>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-form" class="hidden">
+        <div class="space-y-4">
+          <div>
+            <label class="text-text-muted text-sm block mb-2">用户名</label>
+            <input type="text" id="register-username" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-text-muted focus:outline-none focus:border-accent/50" placeholder="至少3个字符">
+          </div>
+          <div>
+            <label class="text-text-muted text-sm block mb-2">密码</label>
+            <input type="password" id="register-password" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-text-muted focus:outline-none focus:border-accent/50" placeholder="至少6个字符">
+          </div>
+          <button id="do-register" class="w-full py-3 bg-accent text-white rounded-lg font-medium hover:bg-accent/80 transition-colors">
+            注册
+          </button>
+        </div>
+        <p class="text-center text-text-muted text-sm mt-4">
+          已有账号？<button id="show-login" class="text-accent hover:underline">立即登录</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Container -->
+  <div id="app" class="pt-20">
+    <!-- View: Home -->
+    <div id="home-view" class="view active">
+      <section class="min-h-[90vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float"></div>
+          <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-verdict-yellow/5 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+        </div>
+
+        <div class="max-w-3xl mx-auto text-center relative z-10">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-white mb-6 leading-tight">
+            <span class="block animate-fade-in-up" style="animation-delay: 0.2s;">这个 AI 名词</span>
+            <span class="block animate-fade-in-up text-accent" style="animation-delay: 0.4s;">值得我花时间学吗？</span>
+          </h1>
+
+          <p class="text-lg sm:text-xl text-text-secondary mb-12 max-w-2xl mx-auto animate-fade-in-up" style="animation-delay: 0.6s;">
+            输入任意 AI 技术名词，获得第一性原理拆解报告。<br class="hidden sm:block">理性判断，拒绝焦虑。
+          </p>
+
+          <div class="max-w-xl mx-auto animate-fade-in-up" style="animation-delay: 0.8s;">
+            <input 
+              type="text" 
+              id="search-input"
+              placeholder="输入技术名词（如：Mamba）" 
+              class="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-text-muted focus:outline-none focus:border-accent/50 transition-all duration-300 text-lg"
+              autocomplete="off"
+            >
+
+            <button 
+              id="analyze-btn"
+              class="mt-6 w-full sm:w-auto px-10 py-4 bg-white text-black font-display font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-3 mx-auto"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              开始拆解
+            </button>
+          </div>
+
+          <div class="mt-10 flex flex-wrap justify-center gap-3 animate-fade-in-up" style="animation-delay: 1s;">
+            <span class="text-text-muted text-sm">热门搜索：</span>
+            <button class="quick-tag px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-text-secondary hover:text-white hover:border-accent/50 transition-all duration-300" data-term="Mamba">Mamba</button>
+            <button class="quick-tag px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-text-secondary hover:text-white hover:border-accent/50 transition-all duration-300" data-term="GPT-4">GPT-4</button>
+            <button class="quick-tag px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-text-secondary hover:text-white hover:border-accent/50 transition-all duration-300" data-term="RAG">RAG</button>
+            <button class="quick-tag px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-text-secondary hover:text-white hover:border-accent/50 transition-all duration-300" data-term="LoRA">LoRA</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hot Tech Stream -->
+      <section class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl sm:text-4xl font-display font-bold text-white mb-4">热点技术流</h2>
+            <p class="text-text-secondary">最近分析的 AI 技术名词</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="hot-stream"></div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5">
+        <div class="max-w-6xl mx-auto">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-text-muted text-sm">© 2024 反 FOMO. 理性学习，拒绝焦虑。</p>
+            <div class="flex items-center gap-6">
+              <a href="https://github.com" target="_blank" class="text-text-muted hover:text-white text-sm transition-colors">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- View: Loading -->
+    <div id="loading-view" class="view">
+      <section class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-lg mx-auto text-center">
+          <div class="mb-8">
+            <div class="flex justify-center gap-2 mb-6">
+              <div class="loading-dot"></div>
+              <div class="loading-dot"></div>
+              <div class="loading-dot"></div>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-display font-bold text-white mb-2">正在拆解...</h2>
+            <p id="loading-term" class="text-accent text-lg"></p>
+          </div>
+
+          <div class="space-y-4">
+            <div class="analysis-step p-4 bg-bg-secondary rounded-lg border border-white/5 flex items-center gap-4" data-step="1">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                <span class="text-accent text-sm font-bold">1</span>
+              </div>
+              <span class="text-text-secondary">概念识别</span>
+            </div>
+            <div class="analysis-step p-4 bg-bg-secondary rounded-lg border border-white/5 flex items-center gap-4" data-step="2">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                <span class="text-accent text-sm font-bold">2</span>
+              </div>
+              <span class="text-text-secondary">原理分析</span>
+            </div>
+            <div class="analysis-step p-4 bg-bg-secondary rounded-lg border border-white/5 flex items-center gap-4" data-step="3">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                <span class="text-accent text-sm font-bold">3</span>
+              </div>
+              <span class="text-text-secondary">现实检验</span>
+            </div>
+            <div class="analysis-step p-4 bg-bg-secondary rounded-lg border border-white/5 flex items-center gap-4" data-step="4">
+              <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                <span class="text-accent text-sm font-bold">4</span>
+              </div>
+              <span class="text-text-secondary">判决生成</span>
+            </div>
+          </div>
+
+          <div class="mt-8 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div id="analysis-progress" class="progress-bar h-full bg-accent rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- View: Report -->
+    <div id="report-view" class="view">
+      <div class="sticky top-0 z-40 glass border-b border-white/5">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div class="flex items-center justify-between">
+            <button id="back-btn" class="flex items-center gap-2 text-text-secondary hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              <span>返回</span>
+            </button>
+            <h2 id="report-title" class="text-lg font-display font-semibold text-white"></h2>
+            <div class="w-20"></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto space-y-6">
+          <!-- Verdict -->
+          <div class="bg-bg-secondary rounded-xl border border-white/5 p-8">
+            <div class="text-center">
+              <p class="text-text-muted text-sm mb-4 uppercase tracking-wider">判决结果</p>
+              <div id="verdict-badge" class="inline-flex items-center gap-3 px-8 py-4 rounded-full text-2xl font-bold mb-4 transition-all duration-500"></div>
+              <p id="verdict-reason" class="text-text-secondary text-base max-w-xl mx-auto"></p>
+            </div>
+          </div>
+
+          <!-- First Principles -->
+          <div class="bg-bg-secondary rounded-xl border border-white/5 p-8">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+              </div>
+              <h3 class="text-xl font-display font-bold text-white">第一性原理：它是怎么工作的</h3>
+            </div>
+            <div id="principles-content" class="text-text-secondary leading-relaxed text-lg"></div>
+          </div>
+
+          <!-- Truth -->
+          <div class="bg-bg-secondary rounded-xl border border-white/5 p-8">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 bg-verdict-red/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-verdict-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <h3 class="text-xl font-display font-bold text-white">一句话真相：戳破泡沫</h3>
+            </div>
+            <div id="truth-content"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- View: Admin Dashboard -->
+    <div id="admin-view" class="view">
+      <div class="sticky top-0 z-40 glass border-b border-white/5">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div class="flex items-center justify-between">
+            <button id="admin-back-btn" class="flex items-center gap-2 text-text-secondary hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              <span>返回</span>
+            </button>
+            <h2 class="text-lg font-display font-semibold text-white">📊 数据统计面板</h2>
+            <div class="w-20"></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto">
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="stat-card rounded-xl p-6">
+              <p class="text-text-muted text-sm mb-2">总搜索次数</p>
+              <p id="stat-total" class="text-4xl font-bold text-white">-</p>
+            </div>
+            <div class="stat-card rounded-xl p-6">
+              <p class="text-text-muted text-sm mb-2">今日搜索</p>
+              <p id="stat-today" class="text-4xl font-bold text-accent">-</p>
+            </div>
+            <div class="stat-card rounded-xl p-6">
+              <p class="text-text-muted text-sm mb-2">独立搜索词</p>
+              <p id="stat-unique" class="text-4xl font-bold text-verdict-green">-</p>
+            </div>
+          </div>
+
+          <!-- Hot Terms -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-bg-secondary rounded-xl border border-white/5 p-6">
+              <h3 class="text-lg font-display font-bold text-white mb-4">🔥 热门搜索词 TOP 20</h3>
+              <div id="hot-terms-list" class="space-y-2 max-h-96 overflow-y-auto">
+                <p class="text-text-muted text-center py-8">加载中...</p>
+              </div>
+            </div>
+
+            <div class="bg-bg-secondary rounded-xl border border-white/5 p-6">
+              <h3 class="text-lg font-display font-bold text-white mb-4">🕐 最近搜索</h3>
+              <div id="recent-searches-list" class="space-y-2 max-h-96 overflow-y-auto">
+                <p class="text-text-muted text-center py-8">加载中...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ==================== Config ====================
+    // 修改这里切换后端地址
+    const API_BASE_URL = '';  // 空字符串表示同域，或填写 'https://your-backend.com'
+    
+    // ==================== Auth Manager ====================
+    class AuthManager {
+      constructor() {
+        this.token = localStorage.getItem('anti-fomo-token');
+        this.user = JSON.parse(localStorage.getItem('anti-fomo-user') || 'null');
+      }
+
+      isLoggedIn() {
+        return !!this.token;
+      }
+
+      isAdmin() {
+        return this.user && this.user.is_admin;
+      }
+
+      getToken() {
+        return this.token;
+      }
+
+      getUser() {
+        return this.user;
+      }
+
+      setAuth(token, user) {
+        this.token = token;
+        this.user = user;
+        localStorage.setItem('anti-fomo-token', token);
+        localStorage.setItem('anti-fomo-user', JSON.stringify(user));
+      }
+
+      clearAuth() {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem('anti-fomo-token');
+        localStorage.removeItem('anti-fomo-user');
+      }
+
+      async login(username, password) {
+        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '登录失败');
+        }
+
+        const data = await response.json();
+        this.setAuth(data.token, data.user);
+        return data;
+      }
+
+      async register(username, password) {
+        const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '注册失败');
+        }
+
+        return await response.json();
+      }
+
+      logout() {
+        this.clearAuth();
+      }
+    }
+
+    const auth = new AuthManager();
+
+    // ==================== API Service ====================
+    class APIService {
+      async fetch(url, options = {}) {
+        const headers = {
+          'Content-Type': 'application/json',
+          ...options.headers
+        };
+
+        if (auth.isLoggedIn()) {
+          headers['Authorization'] = `Bearer ${auth.getToken()}`;
+        }
+
+        const response = await fetch(url, {
+          ...options,
+          headers
+        });
+
+        if (response.status === 401) {
+          auth.logout();
+          app.updateAuthUI();
+          throw new Error('登录已过期，请重新登录');
+        }
+
+        return response;
+      }
+
+      async analyze(term) {
+        const response = await this.fetch(`${API_BASE_URL}/api/analyze`, {
+          method: 'POST',
+          body: JSON.stringify({ term })
+        });
+
+        if (!response.ok) {
+          throw new Error('分析失败');
+        }
+
+        return await response.json();
+      }
+
+      async getSearchStats() {
+        const response = await this.fetch(`${API_BASE_URL}/api/search/stats`);
+        if (!response.ok) {
+          throw new Error('获取统计数据失败');
+        }
+        return await response.json();
+      }
+    }
+
+    const apiService = new APIService();
+
+    // ==================== Main App ====================
+    class AntiFOMOApp {
+      constructor() {
+        this.currentView = 'home';
+        this.currentReport = null;
+        this.init();
+      }
+
+      init() {
+        this.bindEvents();
+        this.renderHotStream();
+        this.updateAuthUI();
+        this.initScrollEffects();
+      }
+
+      bindEvents() {
+        // Search
+        document.getElementById('analyze-btn').addEventListener('click', () => this.startAnalysis());
+        document.getElementById('search-input').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') this.startAnalysis();
+        });
+
+        document.querySelectorAll('.quick-tag').forEach(tag => {
+          tag.addEventListener('click', (e) => {
+            document.getElementById('search-input').value = e.target.dataset.term;
+            this.startAnalysis();
+          });
+        });
+
+        document.getElementById('back-btn').addEventListener('click', () => this.switchView('home'));
+        document.getElementById('admin-back-btn').addEventListener('click', () => this.switchView('home'));
+
+        // Login Modal
+        document.getElementById('login-btn').addEventListener('click', () => {
+          document.getElementById('login-modal').classList.add('active');
+        });
+
+        document.getElementById('close-login').addEventListener('click', () => {
+          document.getElementById('login-modal').classList.remove('active');
+        });
+
+        document.getElementById('show-register').addEventListener('click', () => {
+          document.getElementById('login-form').classList.add('hidden');
+          document.getElementById('register-form').classList.remove('hidden');
+        });
+
+        document.getElementById('show-login').addEventListener('click', () => {
+          document.getElementById('register-form').classList.add('hidden');
+          document.getElementById('login-form').classList.remove('hidden');
+        });
+
+        // Login/Register actions
+        document.getElementById('do-login').addEventListener('click', () => this.handleLogin());
+        document.getElementById('do-register').addEventListener('click', () => this.handleRegister());
+        document.getElementById('logout-btn').addEventListener('click', () => this.handleLogout());
+
+        // Admin link
+        document.getElementById('admin-link').addEventListener('click', () => {
+          this.switchView('admin');
+          this.loadAdminStats();
+        });
+
+        // Close modal on outside click
+        document.getElementById('login-modal').addEventListener('click', (e) => {
+          if (e.target === document.getElementById('login-modal')) {
+            document.getElementById('login-modal').classList.remove('active');
+          }
+        });
+      }
+
+      initScrollEffects() {
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 50) {
+            navbar.classList.add('glass');
+          } else {
+            navbar.classList.remove('glass');
+          }
+        }, { passive: true });
+      }
+
+      updateAuthUI() {
+        const loginBtn = document.getElementById('login-btn');
+        const userMenu = document.getElementById('user-menu');
+        const adminLink = document.getElementById('admin-link');
+        const usernameDisplay = document.getElementById('username-display');
+
+        if (auth.isLoggedIn()) {
+          loginBtn.classList.add('hidden');
+          userMenu.classList.remove('hidden');
+          usernameDisplay.textContent = auth.getUser().username;
+          
+          if (auth.isAdmin()) {
+            adminLink.classList.remove('hidden');
+          } else {
+            adminLink.classList.add('hidden');
+          }
+        } else {
+          loginBtn.classList.remove('hidden');
+          userMenu.classList.add('hidden');
+          adminLink.classList.add('hidden');
+        }
+      }
+
+      async handleLogin() {
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!username || !password) {
+          alert('请输入用户名和密码');
+          return;
+        }
+
+        try {
+          await auth.login(username, password);
+          document.getElementById('login-modal').classList.remove('active');
+          this.updateAuthUI();
+          alert('登录成功');
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+
+      async handleRegister() {
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+
+        if (!username || !password) {
+          alert('请输入用户名和密码');
+          return;
+        }
+
+        if (username.length < 3 || password.length < 6) {
+          alert('用户名至少3位，密码至少6位');
+          return;
+        }
+
+        try {
+          await auth.register(username, password);
+          alert('注册成功，请登录');
+          document.getElementById('register-form').classList.add('hidden');
+          document.getElementById('login-form').classList.remove('hidden');
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+
+      handleLogout() {
+        auth.logout();
+        this.updateAuthUI();
+        alert('已退出登录');
+      }
+
+      async startAnalysis() {
+        const term = document.getElementById('search-input').value.trim();
+        if (!term) return;
+
+        this.switchView('loading');
+        document.getElementById('loading-term').textContent = term;
+
+        this.runAnalysisAnimation();
+
+        try {
+          const report = await apiService.analyze(term);
+          this.currentReport = report;
+          
+          setTimeout(() => {
+            this.renderReport();
+            this.switchView('report');
+          }, 2200);
+        } catch (error) {
+          console.error('分析失败:', error);
+          alert('分析失败: ' + error.message);
+          this.switchView('home');
+        }
+      }
+
+      runAnalysisAnimation() {
+        const steps = document.querySelectorAll('.analysis-step');
+        const progress = document.getElementById('analysis-progress');
+
+        steps.forEach(s => s.classList.remove('active', 'completed'));
+        progress.style.width = '0%';
+
+        const sequence = [
+          { step: 0, progress: 25, delay: 0 },
+          { step: 1, progress: 50, delay: 500 },
+          { step: 2, progress: 75, delay: 1000 },
+          { step: 3, progress: 100, delay: 1500 }
+        ];
+
+        sequence.forEach(({ step, progress: p, delay }) => {
+          setTimeout(() => {
+            steps.forEach((s, i) => {
+              if (i < step) s.classList.add('completed');
+              else s.classList.remove('completed', 'active');
+            });
+            steps[step].classList.add('active');
+            progress.style.width = p + '%';
+          }, delay);
+        });
+      }
+
+      switchView(viewName) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewName + '-view').classList.add('active');
+        this.currentView = viewName;
+        window.scrollTo(0, 0);
+      }
+
+      renderReport() {
+        if (!this.currentReport) return;
+
+        const report = this.currentReport;
+        document.getElementById('report-title').textContent = `【${report.term}】拆解报告`;
+
+        const verdictBadge = document.getElementById('verdict-badge');
+        const verdictConfig = {
+          green: { text: '🟢 投入', class: 'bg-verdict-green/20 text-verdict-green verdict-green-glow border border-verdict-green/30' },
+          yellow: { text: '🟡 了解', class: 'bg-verdict-yellow/20 text-verdict-yellow verdict-yellow-glow border border-verdict-yellow/30' },
+          red: { text: '🔴 观望', class: 'bg-verdict-red/20 text-verdict-red verdict-red-glow border border-verdict-red/30' }
+        };
+        const config = verdictConfig[report.verdict] || verdictConfig.yellow;
+        verdictBadge.className = `inline-flex items-center gap-3 px-8 py-4 rounded-full text-2xl font-bold mb-4 transition-all duration-500 ${config.class}`;
+        verdictBadge.textContent = config.text;
+        document.getElementById('verdict-reason').textContent = report.verdictReason;
+
+        document.getElementById('principles-content').innerHTML = `<p class="text-lg leading-relaxed">${report.firstPrinciples}</p>`;
+
+        let truthHTML = `
+          <div class="p-4 bg-verdict-red/5 border border-verdict-red/20 rounded-lg">
+            <p class="text-white text-lg font-medium mb-2">💡 真相</p>
+            <p class="text-text-secondary">${report.truth}</p>
+          </div>
+        `;
+        
+        if (report.hypeVsReality && report.hypeVsReality.length > 0) {
+          truthHTML += `
+            <div class="mt-4 space-y-3">
+              <p class="text-text-muted text-sm">常见话术 vs 现实：</p>
+              ${report.hypeVsReality.map(item => `
+                <div class="flex gap-4 p-3 bg-white/5 rounded-lg">
+                  <div class="flex-1">
+                    <p class="text-verdict-red text-sm mb-1">💬 ${item.hype}</p>
+                    <p class="text-verdict-green text-sm">✓ ${item.reality}</p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+        
+        document.getElementById('truth-content').innerHTML = truthHTML;
+      }
+
+      async loadAdminStats() {
+        try {
+          const stats = await apiService.getSearchStats();
+          
+          document.getElementById('stat-total').textContent = stats.total_searches;
+          document.getElementById('stat-today').textContent = stats.today_searches;
+          document.getElementById('stat-unique').textContent = stats.unique_terms;
+
+          const hotTermsList = document.getElementById('hot-terms-list');
+          if (stats.hot_terms.length === 0) {
+            hotTermsList.innerHTML = '<p class="text-text-muted text-center py-8">暂无数据</p>';
+          } else {
+            hotTermsList.innerHTML = stats.hot_terms.map((item, index) => `
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="w-6 h-6 flex items-center justify-center rounded-full ${index < 3 ? 'bg-accent text-white' : 'bg-white/10 text-text-muted'} text-xs font-bold">
+                    ${index + 1}
+                  </span>
+                  <span class="text-white">${item.term}</span>
+                </div>
+                <span class="text-accent font-medium">${item.count} 次</span>
+              </div>
+            `).join('');
+          }
+
+          const recentList = document.getElementById('recent-searches-list');
+          if (stats.recent_searches.length === 0) {
+            recentList.innerHTML = '<p class="text-text-muted text-center py-8">暂无数据</p>';
+          } else {
+            recentList.innerHTML = stats.recent_searches.map(item => `
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-white">${item.term}</span>
+                <span class="text-text-muted text-sm">${new Date(item.time).toLocaleString()}</span>
+              </div>
+            `).join('');
+          }
+        } catch (error) {
+          console.error('加载统计数据失败:', error);
+          alert('加载统计数据失败: ' + error.message);
+        }
+      }
+
+      renderHotStream() {
+        const container = document.getElementById('hot-stream');
+        const items = [
+          { term: 'Mamba', verdict: 'yellow', desc: '长序列建模新架构' },
+          { term: 'GPT-4', verdict: 'green', desc: '生产环境首选大模型' },
+          { term: 'RAG', verdict: 'green', desc: '检索增强生成标准方案' },
+          { term: 'LoRA', verdict: 'green', desc: '高效微调标准方案' },
+          { term: 'Blockchain + AI', verdict: 'red', desc: '概念炒作，缺乏价值' },
+          { term: 'Metaverse', verdict: 'red', desc: '过度炒作，市场未成熟' }
+        ];
+
+        container.innerHTML = items.map((item, index) => {
+          const verdictConfig = {
+            green: { color: 'verdict-green', bg: 'bg-verdict-green/10', border: 'border-verdict-green/30' },
+            yellow: { color: 'verdict-yellow', bg: 'bg-verdict-yellow/10', border: 'border-verdict-yellow/30' },
+            red: { color: 'verdict-red', bg: 'bg-verdict-red/10', border: 'border-verdict-red/30' }
+          };
+          const config = verdictConfig[item.verdict];
+
+          return `
+            <div class="tech-card bg-bg-secondary rounded-xl border border-white/5 p-6 cursor-pointer animate-fade-in-up" 
+                 style="animation-delay: ${index * 0.1}s"
+                 onclick="app.startAnalysisFromCard('${item.term}')">
+              <div class="flex items-start justify-between mb-4">
+                <h3 class="text-xl font-display font-bold text-white">${item.term}</h3>
+                <span class="px-3 py-1 ${config.bg} ${config.border} border rounded-full text-xs font-medium ${config.color}">
+                  ${item.verdict === 'green' ? '投入' : item.verdict === 'yellow' ? '了解' : '观望'}
+                </span>
+              </div>
+              <p class="text-text-secondary text-sm line-clamp-2">${item.desc}</p>
+            </div>
+          `;
+        }).join('');
+      }
+
+      startAnalysisFromCard(term) {
+        document.getElementById('search-input').value = term;
+        this.startAnalysis();
+      }
+    }
+
+    const app = new AntiFOMOApp();
+  </script>
+</body>
+</html>
