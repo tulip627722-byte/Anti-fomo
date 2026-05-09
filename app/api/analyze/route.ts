@@ -78,134 +78,134 @@ const SYSTEM_PROMPT = `你是一个帮助开发者判断"某项 AI 技术是否�
 
 const PROFILES: Record<string, KnowledgeProfile> = {
   rag: {
-    verdict: “green”,
-    essence: “RAG 的本质是：用检索+生成的拼接机制，解决大模型知识截止日期和幻觉问题。”,
+    verdict: "green",
+    essence: "RAG 的本质是：用检索+生成的拼接机制，解决大模型知识截止日期和幻觉问题。",
     coreValue: {
       description:
-        “它解决的是大模型不知道私有知识、知识过期、回答不可追溯的问题。核心价值不在生成，而在检索质量和引用依据。相比只微调模型的方案，RAG 能灵活更新知识库而无需重新训练。”,
-      conclusion: “价值高，解决了大模型应用中的核心问题。”,
+        "它解决的是大模型不知道私有知识、知识过期、回答不可追溯的问题。核心价值不在生成，而在检索质量和引用依据。相比只微调模型的方案，RAG 能灵活更新知识库而无需重新训练。",
+      conclusion: "价值高，解决了大模型应用中的核心问题。",
     },
     applicationProspect: {
       description:
-        “客服、内部知识库、投研、法务和代码库问答都有生产案例。预计 1-2 年内普通开发者在构建 LLM 应用时大概率会接触到这个技术。”,
-      conclusion: “前景明确，落地场景丰富。”,
+        "客服、内部知识库、投研、法务和代码库问答都有生产案例。预计 1-2 年内普通开发者在构建 LLM 应用时大概率会接触到这个技术。",
+      conclusion: "前景明确，落地场景丰富。",
     },
     learningCost: {
       description:
-        “需要理解 embedding、向量库、chunking、rerank 和评测。预计 3-5 天的学习和实践。前置知识包括 LLM 基础、向量表示、SQL/NoSQL。”,
-      conclusion: “成本中等，有一定前置要求但可接受。”,
+        "需要理解 embedding、向量库、chunking、rerank 和评测。预计 3-5 天的学习和实践。前置知识包括 LLM 基础、向量表示、SQL/NoSQL。",
+      conclusion: "成本中等，有一定前置要求但可接受。",
     },
     verdictReason:
-      “核心价值强、应用场景明确、学习成本合理，现在投入学习收益最大。”,
+      "核心价值强、应用场景明确、学习成本合理，现在投入学习收益最大。",
   },
   mamba: {
-    verdict: “yellow”,
+    verdict: "yellow",
     essence:
-      “Mamba 的本质是：用选择性状态空间模型替代注意力的一部分长序列计算。”,
+      "Mamba 的本质是：用选择性状态空间模型替代注意力的一部分长序列计算。",
     coreValue: {
       description:
-        “它尝试降低长上下文建模的计算和内存压力，价值集中在长序列、流式处理和特定硬件友好场景。相比 Transformer，在某些长序列场景下性能更优，但通用能力还未完全超越。”,
-      conclusion: “价值中等，在特定场景有优势但不可替代性待验证。”,
+        "它尝试降低长上下文建模的计算和内存压力，价值集中在长序列、流式处理和特定硬件友好场景。相比 Transformer，在某些长序列场景下性能更优，但通用能力还未完全超越。",
+      conclusion: "价值中等，在特定场景有优势但不可替代性待验证。",
     },
     applicationProspect: {
       description:
-        “研究价值明确，但工程生态、预训练模型、工具链和主流 LLM 集成仍弱于 Transformer 路线。短期内适用场景有限。”,
-      conclusion: “前景尚早，生态成熟度需进一步观察。”,
+        "研究价值明确，但工程生态、预训练模型、工具链和主流 LLM 集成仍弱于 Transformer 路线。短期内适用场景有限。",
+      conclusion: "前景尚早，生态成熟度需进一步观察。",
     },
     learningCost: {
       description:
-        “需要线性系统、深度学习架构和序列建模基础。预计 5-7 天了解原理。前置知识包括状态空间模型、RNN 变体、计算复杂度分析。”,
-      conclusion: “成本中等，有一定数学基础要求。”,
+        "需要线性系统、深度学习架构和序列建模基础。预计 5-7 天了解原理。前置知识包括状态空间模型、RNN 变体、计算复杂度分析。",
+      conclusion: "成本中等，有一定数学基础要求。",
     },
     verdictReason:
-      “有潜力但生态和通用性还不成熟，建议先了解概念，持续关注发展。”,
+      "有潜力但生态和通用性还不成熟，建议先了解概念，持续关注发展。",
   },
   lora: {
-    verdict: “green”,
-    essence: “LoRA 的本质是：用低秩增量矩阵近似权重更新，解决大模型微调成本高的问题。”,
+    verdict: "green",
+    essence: "LoRA 的本质是：用低秩增量矩阵近似权重更新，解决大模型微调成本高的问题。",
     coreValue: {
       description:
-        “它解决的是全量微调显存高、成本高、难管理的问题，让小数据定制和多 adapter 切换变得可行。相比全量微调，LoRA 参数量少 99%，训练速度快 10 倍。”,
-      conclusion: “价值高，已成为模型定制的标准方案。”,
+        "它解决的是全量微调显存高、成本高、难管理的问题，让小数据定制和多 adapter 切换变得可行。相比全量微调，LoRA 参数量少 99%，训练速度快 10 倍。",
+      conclusion: "价值高，已成为模型定制的标准方案。",
     },
     applicationProspect: {
       description:
-        “在风格迁移、领域微调、图像模型和开源 LLM 定制中都很常见。生产级应用广泛，几乎所有开源大模型都支持 LoRA。”,
-      conclusion: “前景明确，生态成熟度最高。”,
+        "在风格迁移、领域微调、图像模型和开源 LLM 定制中都很常见。生产级应用广泛，几乎所有开源大模型都支持 LoRA。",
+      conclusion: "前景明确，生态成熟度最高。",
     },
     learningCost: {
       description:
-        “成本较低，掌握矩阵分解直觉、训练数据格式和推理合并方式即可开始实践。预计 2-3 天能跑通完整工作流。”,
-      conclusion: “成本低，是微调入门的最佳选择。”,
+        "成本较低，掌握矩阵分解直觉、训练数据格式和推理合并方式即可开始实践。预计 2-3 天能跑通完整工作流。",
+      conclusion: "成本低，是微调入门的最佳选择。",
     },
     verdictReason:
-      “成熟可靠、应用广泛、学习成本最低，现在投入学习收益明确。”,
+      "成熟可靠、应用广泛、学习成本最低，现在投入学习收益明确。",
   },
-  “ai agent”: {
-    verdict: “green”,
+  "ai agent": {
+    verdict: "green",
     essence:
-      “AI Agent 的本质是：让模型在目标、工具、记忆和反馈循环里完成多步任务。”,
+      "AI Agent 的本质是：让模型在目标、工具、记忆和反馈循环里完成多步任务。",
     coreValue: {
       description:
-        “它解决的是单轮生成无法执行复杂工作流的问题，价值来自任务分解、工具调用和状态管理。相比传统编程，Agent 降低了自动化的编码成本。”,
-      conclusion: “价值高，是大模型落地的关键形态。”,
+        "它解决的是单轮生成无法执行复杂工作流的问题，价值来自任务分解、工具调用和状态管理。相比传统编程，Agent 降低了自动化的编码成本。",
+      conclusion: "价值高，是大模型落地的关键形态。",
     },
     applicationProspect: {
       description:
-        “代码助手、数据分析、运维、销售运营和内部自动化都在落地。预计 1-2 年内会成为 LLM 应用的标准范式。”,
-      conclusion: “前景明确，应用方向多元。”,
+        "代码助手、数据分析、运维、销售运营和内部自动化都在落地。预计 1-2 年内会成为 LLM 应用的标准范式。",
+      conclusion: "前景明确，应用方向多元。",
     },
     learningCost: {
       description:
-        “需要会 prompt、函数调用、工作流编排、错误恢复和安全边界。预计 5-7 天从入门到能自己设计简单 agent。前置知识：LLM 基础、JSON 序列化、API 调用。”,
-      conclusion: “成本中等，涉及多个知识领域。”,
+        "需要会 prompt、函数调用、工作流编排、错误恢复和安全边界。预计 5-7 天从入门到能自己设计简单 agent。前置知识：LLM 基础、JSON 序列化、API 调用。",
+      conclusion: "成本中等，涉及多个知识领域。",
     },
     verdictReason:
-      “应用前景广、正在快速成熟，现在学习能抓住行业发展的新机遇。”,
+      "应用前景广、正在快速成熟，现在学习能抓住行业发展的新机遇。",
   },
   harness: {
-    verdict: “yellow”,
+    verdict: "yellow",
     essence:
-      “Harness 的本质是：把模型、任务、数据、评测指标和运行环境固定成可重复的测试装置。”,
+      "Harness 的本质是：把模型、任务、数据、评测指标和运行环境固定成可重复的测试装置。",
     coreValue: {
       description:
-        “它解决的不是模型能力本身，而是'怎么稳定比较、复现和回归验证模型表现'的工程问题。价值取决于你是否需要严谨的评测流程。”,
-      conclusion: “价值中等，主要解决工程问题而非能力问题。”,
+        "它解决的不是模型能力本身，而是'怎么稳定比较、复现和回归验证模型表现'的工程问题。价值取决于你是否需要严谨的评测流程。",
+      conclusion: "价值中等，主要解决工程问题而非能力问题。",
     },
     applicationProspect: {
       description:
-        “在模型评测、agent 回归测试、prompt 版本管理和 CI 流程里有用，但通常作为基础设施的一部分出现，而非直接应用。”,
-      conclusion: “前景局限，是支撑性工具而非核心技术。”,
+        "在模型评测、agent 回归测试、prompt 版本管理和 CI 流程里有用，但通常作为基础设施的一部分出现，而非直接应用。",
+      conclusion: "前景局限，是支撑性工具而非核心技术。",
     },
     learningCost: {
       description:
-        “概念成本低，难点在指标设计、测试集质量和自动化接入。预计 3-5 天理解核心思路。”,
-      conclusion: “成本低，但深度应用需要更多工程经验。”,
+        "概念成本低，难点在指标设计、测试集质量和自动化接入。预计 3-5 天理解核心思路。",
+      conclusion: "成本低，但深度应用需要更多工程经验。",
     },
     verdictReason:
-      “有工程价值但适用面有限，建议先掌握评测思路，需要时再深入具体工具。”,
+      "有工程价值但适用面有限，建议先掌握评测思路，需要时再深入具体工具。",
   },
   transformer: {
-    verdict: “green”,
+    verdict: "green",
     essence:
-      “Transformer 的本质是：用自注意力让序列里的每个 token 动态读取其他 token 的信息。”,
+      "Transformer 的本质是：用自注意力让序列里的每个 token 动态读取其他 token 的信息。",
     coreValue: {
       description:
-        “它解决了长距离依赖和并行训练问题，是 LLM、视觉 Transformer 和多模态模型的共同底座。理解 Transformer 是读懂现代 AI 的基础。”,
-      conclusion: “价值高且不可替代，几乎所有主流模型都基于它。”,
+        "它解决了长距离依赖和并行训练问题，是 LLM、视觉 Transformer 和多模态模型的共同底座。理解 Transformer 是读懂现代 AI 的基础。",
+      conclusion: "价值高且不可替代，几乎所有主流模型都基于它。",
     },
     applicationProspect: {
       description:
-        “几乎所有主流大模型都绕不开它，理解它能帮助你读论文、调模型、判断新架构宣传是否靠谱。”,
-      conclusion: “前景明确，长期学习价值最高。”,
+        "几乎所有主流大模型都绕不开它，理解它能帮助你读论文、调模型、判断新架构宣传是否靠谱。",
+      conclusion: "前景明确，长期学习价值最高。",
     },
     learningCost: {
       description:
-        “学习成本中高，需要矩阵运算、注意力机制和训练流程基础。预计 7-10 天深入理解。但投入回报非常稳定。”,
-      conclusion: “成本高，但回报最为持久。”,
+        "学习成本中高，需要矩阵运算、注意力机制和训练流程基础。预计 7-10 天深入理解。但投入回报非常稳定。",
+      conclusion: "成本高，但回报最为持久。",
     },
     verdictReason:
-      “基础性知识、长期价值高，是深入 AI 的必修课。”,
+      "基础性知识、长期价值高，是深入 AI 的必修课。",
   },
 };
 
@@ -649,81 +649,81 @@ function inferProfile(term: string): KnowledgeProfile {
   const lowerTerm = term.toLowerCase();
 
   if (
-    lowerTerm.includes(“web3”) ||
-    lowerTerm.includes(“blockchain”) ||
-    lowerTerm.includes(“metaverse”)
+    lowerTerm.includes("web3") ||
+    lowerTerm.includes("blockchain") ||
+    lowerTerm.includes("metaverse")
   ) {
     return {
-      verdict: “red”,
+      verdict: "red",
       essence: `${term} 的本质是把热门叙事概念组合，但技术闭环和商业模式仍不清晰。`,
       coreValue: {
         description:
-          “核心价值需要证明它比现有 AI 工作流多解决了什么问题。如果只是换包装，学习优先级应降低。”,
-        conclusion: “价值存疑，缺乏明确的实际应用场景。”,
+          "核心价值需要证明它比现有 AI 工作流多解决了什么问题。如果只是换包装，学习优先级应降低。",
+        conclusion: "价值存疑，缺乏明确的实际应用场景。",
       },
       applicationProspect: {
         description:
-          “短期更多是概念炒作，真实应用案例和稳定生态仍在探索中。”,
-        conclusion: “前景局限，建议观望主流方向的发展。”,
+          "短期更多是概念炒作，真实应用案例和稳定生态仍在探索中。",
+        conclusion: "前景局限，建议观望主流方向的发展。",
       },
       learningCost: {
         description:
-          “不建议现在系统投入，保持概念级了解即可，把时间留给更基础、更可迁移的技术。”,
-        conclusion: “成本低，但收益不确定。”,
+          "不建议现在系统投入，保持概念级了解即可，把时间留给更基础、更可迁移的技术。",
+        conclusion: "成本低，但收益不确定。",
       },
       verdictReason:
-        “价值模糊、应用案例不足、投入产出比不清晰，建议暂时观望。”,
+        "价值模糊、应用案例不足、投入产出比不清晰，建议暂时观望。",
     };
   }
 
   if (
-    lowerTerm.includes(“eval”) ||
-    lowerTerm.includes(“benchmark”) ||
-    lowerTerm.includes(“test”)
+    lowerTerm.includes("eval") ||
+    lowerTerm.includes("benchmark") ||
+    lowerTerm.includes("test")
   ) {
     return {
-      verdict: “yellow”,
+      verdict: "yellow",
       essence: `${term} 的本质是把模型表现从主观感觉变成可重复、可比较的量化证据。`,
       coreValue: {
         description:
-          “它解决模型效果难复现、版本难比较的问题。但指标设计不当会制造新的错觉，价值高度依赖具体场景。”,
-        conclusion: “价值中等，工程价值明确但不是核心能力。”,
+          "它解决模型效果难复现、版本难比较的问题。但指标设计不当会制造新的错觉，价值高度依赖具体场景。",
+        conclusion: "价值中等，工程价值明确但不是核心能力。",
       },
       applicationProspect: {
         description:
-          “适合进入团队的模型上线、prompt 迭代和 agent 回归流程。个人学习可先抓住评测方法论。”,
-        conclusion: “前景明确，但更多是支撑性工具。”,
+          "适合进入团队的模型上线、prompt 迭代和 agent 回归流程。个人学习可先抓住评测方法论。",
+        conclusion: "前景明确，但更多是支撑性工具。",
       },
       learningCost: {
         description:
-          “概念不难，难点在指标设计、测试集质量和自动化接入。预计 3-5 天理解核心。”,
-        conclusion: “成本低，深度应用需要工程经验。”,
+          "概念不难，难点在指标设计、测试集质量和自动化接入。预计 3-5 天理解核心。",
+        conclusion: "成本低，深度应用需要工程经验。",
       },
       verdictReason:
-        “工程价值明确但适用面有限，可先掌握方法论，需要时再深入。”,
+        "工程价值明确但适用面有限，可先掌握方法论，需要时再深入。",
     };
   }
 
   return {
-    verdict: “yellow”,
-    essence: `${term} 的本质需要拆成”输入是什么、核心变换是什么、输出改善了什么”来判断。`,
+    verdict: "yellow",
+    essence: `${term} 的本质需要拆成"输入是什么、核心变换是什么、输出改善了什么"来判断。`,
     coreValue: {
       description: `判断 ${term} 时先看它是否解决一个根本问题，而不是只提供一个更好听的分类名。`,
-      conclusion: “价值中等，需要结合具体应用判断。”,
+      conclusion: "价值中等，需要结合具体应用判断。",
     },
     applicationProspect: {
       description:
-        “如果已有稳定开源实现、真实客户案例和可衡量收益，才值得从关注升级为投入。”,
-      conclusion: “前景尚早，建议保持观察。”,
+        "如果已有稳定开源实现、真实客户案例和可衡量收益，才值得从关注升级为投入。",
+      conclusion: "前景尚早，建议保持观察。",
     },
     learningCost: {
       description: `先读一篇权威介绍和一个最小实践，记录 ${term} 依赖的前置知识，再决定是否深入。`,
-      conclusion: “成本中等，取决于具体应用。”,
+      conclusion: "成本中等，取决于具体应用。",
     },
-    verdictReason: “它可能有价值，但成熟度和适用范围仍需观察。建议先了解概念。”,
+    verdictReason: "它可能有价值，但成熟度和适用范围仍需观察。建议先了解概念。",
   };
 }
 
 function isVerdict(verdict: unknown): verdict is Verdict {
-  return verdict === “green” || verdict === “yellow” || verdict === “red”;
+  return verdict === "green" || verdict === "yellow" || verdict === "red";
 }
