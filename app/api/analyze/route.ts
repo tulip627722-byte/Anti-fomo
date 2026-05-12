@@ -36,17 +36,31 @@ JSON 结构必须是：
 }`;
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as AnalyzeBody;
-  const term = body.term?.trim();
-  if (!term) return NextResponse.json({ message: "请输入 AI 名词" }, { status: 400 });
+  try {
+    const body = (await request.json().catch(() => ({}))) as AnalyzeBody;
+    const term = body.term?.trim();
+    if (!term) {
+      return NextResponse.json({ message: "请输入 AI 名词" }, { status: 400 });
+    }
 
-  const result = await analyzeTerm(term);
-  const username = getUsernameFromRequest(request) ?? MOCK_ADMIN.username;
+    const result = await analyzeTerm(term);
+    const username = getUsernameFromRequest(request) ?? MOCK_ADMIN.username;
 
-  await upsertUser(username, MOCK_ADMIN.role);
-  await insertSearchLog({ username, result });
+    try {
+      await upsertUser(username, MOCK_ADMIN.role);
+      await insertSearchLog({ username, result });
+    } catch (dbError) {
+      console.error("Failed to persist analyze result:", dbError);
+    }
 
-  return NextResponse.json(result);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Analyze route failed:", error);
+    return NextResponse.json(
+      { message: "分析服务暂时不可用，请稍后重试" },
+      { status: 500 },
+    );
+  }
 }
 
 async function analyzeTerm(term: string): Promise<AnalysisResult> {

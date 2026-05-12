@@ -12,6 +12,36 @@ import type {
 
 const QUICK_TERMS = ["RAG", "Mamba", "LoRA", "AI Agent", "harness"];
 
+type ApiShape = {
+  message?: string;
+  token?: string;
+  user?: User;
+  history?: HistoryItem[];
+};
+
+async function parseApiBody(response: Response): Promise<ApiShape | null> {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as ApiShape;
+  } catch {
+    return null;
+  }
+}
+
+function getApiErrorMessage(
+  response: Response,
+  payload: ApiShape | null,
+  fallback: string,
+) {
+  if (payload?.message) return payload.message;
+  if (response.status === 401) {
+    return "请求被拦截（401）。请先在浏览器完成 Vercel 访问授权后刷新页面。";
+  }
+  return `${fallback}（HTTP ${response.status}）`;
+}
+
 const verdictStyles: Record<
   Verdict,
   {
@@ -81,9 +111,9 @@ export default function Home() {
       const res = await fetch("/api/history", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "加载历史失败");
-      setHistory(data.history as HistoryItem[]);
+      const data = await parseApiBody(res);
+      if (!res.ok) throw new Error(getApiErrorMessage(res, data, "加载历史失败"));
+      setHistory((data?.history ?? []) as HistoryItem[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "加载历史失败");
     } finally {
@@ -102,14 +132,15 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      const data = await parseApiBody(res);
 
-      if (!res.ok) throw new Error(data.message || "登录失败");
+      if (!res.ok) throw new Error(getApiErrorMessage(res, data, "登录失败"));
+      if (!data?.user || !data?.token) throw new Error("登录响应异常，请稍后重试");
 
-      setUser(data.user as User);
-      setToken(data.token as string);
+      setUser(data.user);
+      setToken(data.token);
       localStorage.setItem("anti-fomo-user", JSON.stringify(data.user));
-      localStorage.setItem("anti-fomo-token", data.token as string);
+      localStorage.setItem("anti-fomo-token", data.token);
     } catch (e) {
       setError(e instanceof Error ? e.message : "登录失败");
     } finally {
@@ -144,8 +175,9 @@ export default function Home() {
         body: JSON.stringify({ term: term.trim() }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "分析失败");
+      const data = await parseApiBody(res);
+      if (!res.ok) throw new Error(getApiErrorMessage(res, data, "分析失败"));
+      if (!data) throw new Error("分析接口返回为空，请稍后重试");
 
       setResult(data as AnalysisResult);
       await fetchHistory(token);
