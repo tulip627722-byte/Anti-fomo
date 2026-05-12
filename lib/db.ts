@@ -1,18 +1,14 @@
-import { neon } from "@neondatabase/serverless";
+﻿import { neon } from "@neondatabase/serverless";
+import type { AnalysisResult, HistoryItem } from "@/lib/types";
 
 type HistoryRow = {
-  id: number;
   term: string;
   verdict: string;
   essence: string;
-  core_value_description: string;
-  core_value_conclusion: string;
-  application_prospect_description: string;
-  application_prospect_conclusion: string;
-  learning_cost_description: string;
-  learning_cost_conclusion: string;
+  core_value: unknown;
+  application_prospect: unknown;
+  learning_cost: unknown;
   verdict_reason: string;
-  username: string;
   created_at: string;
 };
 
@@ -21,7 +17,7 @@ let schemaReady = false;
 
 function getSql() {
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not configured");
+    throw new Error("DATABASE_URL is required");
   }
 
   if (!sqlInstance) {
@@ -31,7 +27,7 @@ function getSql() {
   return sqlInstance;
 }
 
-export async function ensureSchema() {
+async function ensureSchema() {
   if (schemaReady) return;
 
   const sql = getSql();
@@ -51,12 +47,9 @@ export async function ensureSchema() {
       term TEXT NOT NULL,
       verdict TEXT NOT NULL,
       essence TEXT NOT NULL,
-      core_value_description TEXT NOT NULL,
-      core_value_conclusion TEXT NOT NULL,
-      application_prospect_description TEXT NOT NULL,
-      application_prospect_conclusion TEXT NOT NULL,
-      learning_cost_description TEXT NOT NULL,
-      learning_cost_conclusion TEXT NOT NULL,
+      core_value JSONB NOT NULL,
+      application_prospect JSONB NOT NULL,
+      learning_cost JSONB NOT NULL,
       verdict_reason TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -84,16 +77,12 @@ export async function upsertUser(username: string, role: string) {
 
 export async function insertSearchLog(input: {
   username: string;
-  term: string;
-  verdict: string;
-  essence: string;
-  coreValue: { description: string; conclusion: string };
-  applicationProspect: { description: string; conclusion: string };
-  learningCost: { description: string; conclusion: string };
-  verdictReason: string;
+  result: AnalysisResult;
 }) {
   await ensureSchema();
   const sql = getSql();
+
+  const { username, result } = input;
 
   await sql`
     INSERT INTO search_logs (
@@ -101,48 +90,43 @@ export async function insertSearchLog(input: {
       term,
       verdict,
       essence,
-      core_value_description,
-      core_value_conclusion,
-      application_prospect_description,
-      application_prospect_conclusion,
-      learning_cost_description,
-      learning_cost_conclusion,
+      core_value,
+      application_prospect,
+      learning_cost,
       verdict_reason
     )
     VALUES (
-      ${input.username},
-      ${input.term},
-      ${input.verdict},
-      ${input.essence},
-      ${input.coreValue.description},
-      ${input.coreValue.conclusion},
-      ${input.applicationProspect.description},
-      ${input.applicationProspect.conclusion},
-      ${input.learningCost.description},
-      ${input.learningCost.conclusion},
-      ${input.verdictReason}
+      ${username},
+      ${result.term},
+      ${result.verdict},
+      ${result.essence},
+      ${JSON.stringify(result.coreValue)},
+      ${JSON.stringify(result.applicationProspect)},
+      ${JSON.stringify(result.learningCost)},
+      ${result.verdictReason}
     )
   `;
 }
 
-export async function getSearchHistory(username: string) {
+function parseDimension(value: unknown): { description: string; conclusion: string } {
+  if (!value) return { description: "", conclusion: "" };
+  if (typeof value === "string") return JSON.parse(value) as { description: string; conclusion: string };
+  return value as { description: string; conclusion: string };
+}
+
+export async function getSearchHistory(username: string): Promise<HistoryItem[]> {
   await ensureSchema();
   const sql = getSql();
 
   const rows = (await sql`
     SELECT
-      id,
       term,
       verdict,
       essence,
-      core_value_description,
-      core_value_conclusion,
-      application_prospect_description,
-      application_prospect_conclusion,
-      learning_cost_description,
-      learning_cost_conclusion,
+      core_value,
+      application_prospect,
+      learning_cost,
       verdict_reason,
-      username,
       created_at
     FROM search_logs
     WHERE username = ${username}
@@ -152,20 +136,11 @@ export async function getSearchHistory(username: string) {
 
   return rows.map((row) => ({
     term: row.term,
-    verdict: row.verdict,
+    verdict: row.verdict as HistoryItem["verdict"],
     essence: row.essence,
-    coreValue: {
-      description: row.core_value_description,
-      conclusion: row.core_value_conclusion,
-    },
-    applicationProspect: {
-      description: row.application_prospect_description,
-      conclusion: row.application_prospect_conclusion,
-    },
-    learningCost: {
-      description: row.learning_cost_description,
-      conclusion: row.learning_cost_conclusion,
-    },
+    coreValue: parseDimension(row.core_value),
+    applicationProspect: parseDimension(row.application_prospect),
+    learningCost: parseDimension(row.learning_cost),
     verdictReason: row.verdict_reason,
     createdAt: row.created_at,
   }));

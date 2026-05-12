@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getUsernameFromRequest } from "@/lib/auth";
 import { getSearchHistory } from "@/lib/db";
 

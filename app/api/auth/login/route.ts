@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { MOCK_ADMIN, createMockSessionToken } from "@/lib/auth";
 import { upsertUser } from "@/lib/db";
 
@@ -24,8 +24,5 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json(
-    { message: "用户名或密码错误" },
-    { status: 401 },
-  );
+  return NextResponse.json({ message: "用户名或密码错误" }, { status: 401 });
 }
